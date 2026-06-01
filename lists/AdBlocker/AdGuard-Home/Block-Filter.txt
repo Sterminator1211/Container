@@ -1,2 +1,3 @@
 # [googleadservices.com]
 127.0.0.1 googleadservices.com
+127.0.0.1 www.googleadservices.com
