@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cat Viewer</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fafafa;
+    font-family: Verdana, sans-serif;
+  }
+
+  #cat-photo {
+    max-width: 90vw;
+    max-height: 80vh;
+    border: 4px solid #ccc;
+  }
+</style>
+</head>
+<body>
+
+<img id="cat-photo" src="" alt="A random cat">
+
+<script>
+  var catImg = document.getElementById("cat-photo");
+
+  function loadNewCat() {
+    fetch("https://api.thecatapi.com/v1/images/search?_=" + Date.now())
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (result) {
+        catImg.src = result[0].url;
+      })
+      .catch(function (err) {
+        console.log("Couldn't load a cat:", err);
+      });
+  }
+
+  loadNewCat();
+  setInterval(loadNewCat, 8000);
+</script>
+
+</body>
+</html>
