@@ -11,14 +11,105 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 24px;
     background: #fafafa;
     font-family: Verdana, sans-serif;
+    padding: 24px;
+    box-sizing: border-box;
   }
 
   #cat-photo {
-    max-width: 90vw;
+    max-width: 65vw;
     max-height: 80vh;
     border: 4px solid #ccc;
+  }
+
+  #panel {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .section {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .section h3 {
+    margin: 0 0 10px 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #555;
+  }
+
+  #reroll-btn {
+    width: 100%;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid #999;
+    border-radius: 4px;
+    background: #eee;
+  }
+  #reroll-btn:hover {
+    background: #e0e0e0;
+  }
+
+  .switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider-track {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #ccc;
+    border-radius: 22px;
+    transition: 0.2s;
+  }
+  .slider-track:before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  input:checked + .slider-track {
+    background-color: #4caf50;
+  }
+  input:checked + .slider-track:before {
+    transform: translateX(18px);
+  }
+
+  #interval-row {
+    font-size: 0.8rem;
+    color: #555;
+  }
+
+  #interval-slider {
+    width: 100%;
   }
 </style>
 </head>
@@ -26,8 +117,36 @@
 
 <img id="cat-photo" src="" alt="A random cat">
 
+<div id="panel">
+  <div class="section">
+    <h3>Force</h3>
+    <button id="reroll-btn" type="button">Rerolll</button>
+  </div>
+
+  <div class="section">
+    <h3>Timed</h3>
+    <div class="switch-row">
+      <span>Enable</span>
+      <label class="switch">
+        <input type="checkbox" id="enable-toggle" checked>
+        <span class="slider-track"></span>
+      </label>
+    </div>
+    <div id="interval-row">
+      Interval: <span id="interval-value">8</span>s
+      <input type="range" id="interval-slider" min="1" max="15" value="8" step="1">
+    </div>
+  </div>
+</div>
+
 <script>
   var catImg = document.getElementById("cat-photo");
+  var rerollBtn = document.getElementById("reroll-btn");
+  var enableToggle = document.getElementById("enable-toggle");
+  var intervalSlider = document.getElementById("interval-slider");
+  var intervalValue = document.getElementById("interval-value");
+
+  var timerId = null;
 
   function loadNewCat() {
     fetch("https://api.thecatapi.com/v1/images/search?_=" + Date.now())
@@ -42,8 +161,40 @@
       });
   }
 
+  function stopTimer() {
+    if (timerId !== null) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function startTimer() {
+    stopTimer();
+    var seconds = parseInt(intervalSlider.value, 10);
+    timerId = setInterval(loadNewCat, seconds * 1000);
+  }
+
+  rerollBtn.addEventListener("click", loadNewCat);
+
+  enableToggle.addEventListener("change", function () {
+    if (enableToggle.checked) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+  });
+
+  intervalSlider.addEventListener("input", function () {
+    intervalValue.textContent = intervalSlider.value;
+    if (enableToggle.checked) {
+      startTimer();
+    }
+  });
+
   loadNewCat();
-  setInterval(loadNewCat, 8000);
+  if (enableToggle.checked) {
+    startTimer();
+  }
 </script>
 
 </body>
