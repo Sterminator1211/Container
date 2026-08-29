@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -111,6 +111,20 @@
   #interval-slider {
     width: 100%;
   }
+
+  .radio-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+  }
+  .radio-row:last-child {
+    margin-bottom: 0;
+  }
+  .radio-row input {
+    margin: 0;
+  }
 </style>
 </head>
 <body>
@@ -120,7 +134,7 @@
 <div id="panel">
   <div class="section">
     <h3>Force</h3>
-    <button id="reroll-btn" type="button">Reroll</button>
+    <button id="reroll-btn" type="button">Rerolll</button>
   </div>
 
   <div class="section">
@@ -135,6 +149,22 @@
     <div id="interval-row">
       Interval: <span id="interval-value">8</span>s
       <input type="range" id="interval-slider" min="1" max="15" value="8" step="1">
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Source</h3>
+    <div class="radio-row">
+      <input type="radio" name="source" id="source-catapi" value="catapi" checked>
+      <label for="source-catapi">TheCatAPI</label>
+    </div>
+    <div class="radio-row">
+      <input type="radio" name="source" id="source-cataas" value="cataas">
+      <label for="source-cataas">Cataas</label>
+    </div>
+    <div class="radio-row">
+      <input type="radio" name="source" id="source-randomcat" value="randomcat">
+      <label for="source-randomcat">RandomCatApi</label>
     </div>
   </div>
 </div>
