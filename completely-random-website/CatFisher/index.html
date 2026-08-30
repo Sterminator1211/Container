@@ -156,6 +156,13 @@
   .radio-row input {
     margin: 0;
   }
+
+  body.hide-active .section:not(.main-section) {
+    display: none;
+  }
+  body.hide-active .main-section .hideable {
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -163,13 +170,22 @@
 <img id="cat-photo" src="" alt="A random cat">
 
 <div id="panel">
-  <div class="section">
+  <div class="section main-section">
     <h3>Main</h3>
-    <button id="reroll-btn" type="button">Reroll</button>
-    <div class="switch-row" style="margin-top: 12px;">
+    <div class="hideable">
+      <button id="reroll-btn" type="button">Reroll</button>
+    </div>
+    <div class="switch-row hideable" style="margin-top: 12px;">
       <span>L/D</span>
       <label class="switch">
         <input type="checkbox" id="theme-toggle">
+        <span class="slider-track"></span>
+      </label>
+    </div>
+    <div class="switch-row" style="margin-top: 12px;">
+      <span>Hide</span>
+      <label class="switch">
+        <input type="checkbox" id="hide-toggle">
         <span class="slider-track"></span>
       </label>
     </div>
@@ -214,6 +230,7 @@
   var intervalSlider = document.getElementById("interval-slider");
   var intervalValue = document.getElementById("interval-value");
   var themeToggle = document.getElementById("theme-toggle");
+  var hideToggle = document.getElementById("hide-toggle");
 
   var timerId = null;
 
@@ -262,6 +279,10 @@
 
   themeToggle.addEventListener("change", function () {
     document.body.classList.toggle("dark-mode", themeToggle.checked);
+  });
+
+  hideToggle.addEventListener("change", function () {
+    document.body.classList.toggle("hide-active", hideToggle.checked);
   });
 
   loadNewCat();
