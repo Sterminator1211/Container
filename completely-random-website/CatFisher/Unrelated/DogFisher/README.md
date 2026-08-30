@@ -1,1 +1,1 @@
-Website Here :) - [https://htmlpreview.github.io/?https://github.com/Sterminator1211/Container/blob/0f626460ca79cc466f4b6611b723431efb7c22f5/completely-random-website/CatFisher/Unrelated/DogFisher/index.html](DogFisher - Light Mode)
+Website Here :) - https://urlvanish.com/74c57112
