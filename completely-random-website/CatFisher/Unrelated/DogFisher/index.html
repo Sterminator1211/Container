@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dog Viewer</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    background: #fafafa;
+    font-family: Verdana, sans-serif;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+
+  #dog-photo {
+    max-width: 65vw;
+    max-height: 80vh;
+    border: 4px solid #ccc;
+  }
+
+  #panel {
+    width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .section {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .section h3 {
+    margin: 0 0 10px 0;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #555;
+  }
+
+  #reroll-btn {
+    width: 100%;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid #999;
+    border-radius: 4px;
+    background: #eee;
+  }
+  #reroll-btn:hover {
+    background: #e0e0e0;
+  }
+
+  .switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider-track {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #ccc;
+    border-radius: 22px;
+    transition: 0.2s;
+  }
+  .slider-track:before {
+    content: "";
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  input:checked + .slider-track {
+    background-color: #4caf50;
+  }
+  input:checked + .slider-track:before {
+    transform: translateX(18px);
+  }
+
+  #interval-row {
+    font-size: 0.8rem;
+    color: #555;
+  }
+
+  #interval-slider {
+    width: 100%;
+  }
+
+  .radio-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+  }
+  .radio-row:last-child {
+    margin-bottom: 0;
+  }
+  .radio-row input {
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<img id="dog-photo" src="" alt="A random dog">
+
+<div id="panel">
+  <div class="section">
+    <h3>Force</h3>
+    <button id="reroll-btn" type="button">Reroll</button>
+  </div>
+
+  <div class="section">
+    <h3>Timed</h3>
+    <div class="switch-row">
+      <span>Enable</span>
+      <label class="switch">
+        <input type="checkbox" id="enable-toggle" checked>
+        <span class="slider-track"></span>
+      </label>
+    </div>
+    <div id="interval-row">
+      Interval: <span id="interval-value">8</span>s
+      <input type="range" id="interval-slider" min="1" max="15" value="8" step="1">
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Source</h3>
+    <div class="radio-row">
+      <input type="radio" name="source" id="source-dogceo" value="dogceo" checked>
+      <label for="source-dogceo">Dog CEO's Dog API</label>
+    </div>
+    <div class="radio-row">
+      <input type="radio" name="source" id="source-httpdogs" value="httpdogs">
+      <label for="source-httpdogs">HTTP Dogs</label>
+    </div>
+    <div class="radio-row">
+      <input type="radio" name="source" id="source-randomdog" value="randomdog">
+      <label for="source-randomdog">Random.Dog</label>
+    </div>
+  </div>
+</div>
+
+<script>
+  var dogImg = document.getElementById("dog-photo");
+  var rerollBtn = document.getElementById("reroll-btn");
+  var enableToggle = document.getElementById("enable-toggle");
+  var intervalSlider = document.getElementById("interval-slider");
+  var intervalValue = document.getElementById("interval-value");
+  var sourceRadios = document.querySelectorAll('input[name="source"]');
+
+  var timerId = null;
+
+  // A representative set of status codes supported by HTTP Dogs (https://http.dog)
+  var httpDogStatusCodes = [
+    100, 101, 200, 201, 202, 204, 206, 207,
+    300, 301, 302, 303, 304, 305, 307, 308,
+    400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410,
+    411, 412, 413, 414, 415, 416, 417, 418, 420, 421, 422,
+    423, 424, 425, 426, 429, 431, 444, 450, 451,
+    500, 501, 502, 503, 504, 506, 507, 508, 509, 511
+  ];
+
+  function getSelectedSource() {
+    for (var i = 0; i < sourceRadios.length; i++) {
+      if (sourceRadios[i].checked) {
+        return sourceRadios[i].value;
+      }
+    }
+    return "dogceo";
+  }
+
+  function loadFromDogCeo() {
+    fetch("https://dog.ceo/api/breeds/image/random?_=" + Date.now())
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (result) {
+        dogImg.src = result.message;
+      })
+      .catch(function (err) {
+        console.log("Couldn't load a dog from Dog CEO:", err);
+      });
+  }
+
+  function loadFromHttpDogs() {
+    var code = httpDogStatusCodes[Math.floor(Math.random() * httpDogStatusCodes.length)];
+    dogImg.src = "https://http.dog/" + code + ".jpg?_=" + Date.now();
+  }
+
+  function loadFromRandomDog() {
+    fetch("https://random.dog/woof.json?filter=mp4,webm&_=" + Date.now())
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (result) {
+        dogImg.src = result.url;
+      })
+      .catch(function (err) {
+        console.log("Couldn't load a dog from Random.Dog:", err);
+      });
+  }
+
+  function loadNewDog() {
+    var source = getSelectedSource();
+    if (source === "dogceo") {
+      loadFromDogCeo();
+    } else if (source === "httpdogs") {
+      loadFromHttpDogs();
+    } else if (source === "randomdog") {
+      loadFromRandomDog();
+    }
+  }
+
+  function stopTimer() {
+    if (timerId !== null) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+
+  function startTimer() {
+    stopTimer();
+    var seconds = parseInt(intervalSlider.value, 10);
+    timerId = setInterval(loadNewDog, seconds * 1000);
+  }
+
+  rerollBtn.addEventListener("click", loadNewDog);
+
+  enableToggle.addEventListener("change", function () {
+    if (enableToggle.checked) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
+  });
+
+  intervalSlider.addEventListener("input", function () {
+    intervalValue.textContent = intervalSlider.value;
+    if (enableToggle.checked) {
+      startTimer();
+    }
+  });
+
+  for (var i = 0; i < sourceRadios.length; i++) {
+    sourceRadios[i].addEventListener("change", loadNewDog);
+  }
+
+  loadNewDog();
+  if (enableToggle.checked) {
+    startTimer();
+  }
+</script>
+
+</body>
+</html>
