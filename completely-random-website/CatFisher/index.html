@@ -54,15 +54,40 @@
     width: 220px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
   }
 
   .section {
-    border: 1px solid var(--panel-border);
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--panel-border);
     border-radius: 6px;
     padding: 12px;
     background: var(--panel-bg);
+    margin-bottom: 16px;
     transition: background 0.2s, border-color 0.2s;
+  }
+  #panel .section:last-child {
+    margin-bottom: 0;
+  }
+
+  .section.collapsible {
+    display: grid;
+    grid-template-rows: 1fr;
+    align-items: center;
+    overflow: hidden;
+    transition: grid-template-rows 0.35s ease, padding-top 0.35s ease,
+      padding-bottom 0.35s ease, margin-bottom 0.35s ease, opacity 0.3s ease,
+      background 0.2s, border-color 0.2s;
+  }
+  .section.collapsible.collapsed {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    opacity: 0;
+  }
+  .section-body {
+    min-height: 0;
   }
 
   .section h3 {
@@ -157,9 +182,6 @@
     margin: 0;
   }
 
-  body.hide-active .section:not(.main-section) {
-    display: none;
-  }
   body.hide-active .main-section .hideable {
     display: none;
   }
@@ -191,34 +213,38 @@
     </div>
   </div>
 
-  <div class="section">
-    <h3>Timed</h3>
-    <div class="switch-row">
-      <span>Enable</span>
-      <label class="switch">
-        <input type="checkbox" id="enable-toggle" checked>
-        <span class="slider-track"></span>
-      </label>
-    </div>
-    <div id="interval-row">
-      Interval: <span id="interval-value">8</span>s
-      <input type="range" id="interval-slider" min="1" max="15" value="8" step="1">
+  <div class="section collapsible" id="timed-section">
+    <div class="section-body">
+      <h3>Timed</h3>
+      <div class="switch-row">
+        <span>Enable</span>
+        <label class="switch">
+          <input type="checkbox" id="enable-toggle" checked>
+          <span class="slider-track"></span>
+        </label>
+      </div>
+      <div id="interval-row">
+        Interval: <span id="interval-value">8</span>s
+        <input type="range" id="interval-slider" min="1" max="15" value="8" step="1">
+      </div>
     </div>
   </div>
 
-  <div class="section">
-    <h3>Source</h3>
-    <div class="radio-row">
-      <input type="radio" name="source" id="source-catapi" value="catapi" checked>
-      <label for="source-catapi">TheCatAPI</label>
-    </div>
-    <div class="radio-row">
-      <input type="radio" name="source" id="source-cataas" value="cataas">
-      <label for="source-cataas">Cataas</label>
-    </div>
-    <div class="radio-row">
-      <input type="radio" name="source" id="source-randomcat" value="randomcat">
-      <label for="source-randomcat">RandomCatApi</label>
+  <div class="section collapsible" id="source-section">
+    <div class="section-body">
+      <h3>Source</h3>
+      <div class="radio-row">
+        <input type="radio" name="source" id="source-catapi" value="catapi" checked>
+        <label for="source-catapi">TheCatAPI</label>
+      </div>
+      <div class="radio-row">
+        <input type="radio" name="source" id="source-cataas" value="cataas">
+        <label for="source-cataas">Cataas</label>
+      </div>
+      <div class="radio-row">
+        <input type="radio" name="source" id="source-randomcat" value="randomcat">
+        <label for="source-randomcat">RandomCatApi</label>
+      </div>
     </div>
   </div>
 </div>
@@ -231,6 +257,8 @@
   var intervalValue = document.getElementById("interval-value");
   var themeToggle = document.getElementById("theme-toggle");
   var hideToggle = document.getElementById("hide-toggle");
+  var timedSection = document.getElementById("timed-section");
+  var sourceSection = document.getElementById("source-section");
 
   var timerId = null;
 
@@ -283,6 +311,8 @@
 
   hideToggle.addEventListener("change", function () {
     document.body.classList.toggle("hide-active", hideToggle.checked);
+    timedSection.classList.toggle("collapsed", hideToggle.checked);
+    sourceSection.classList.toggle("collapsed", hideToggle.checked);
   });
 
   loadNewCat();
