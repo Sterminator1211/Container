@@ -3,10 +3,10 @@ const { google } = require('googleapis');
 const crypto = require('crypto');
 
 const {
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  REDIRECT_URI,
-  SESSION_SECRET
+  GOOGLE_CLIENT_ID = '',
+  GOOGLE_CLIENT_SECRET = '',
+  REDIRECT_URI = '',
+  SESSION_SECRET = ''
 } = process.env;
 
 if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !SESSION_SECRET || !REDIRECT_URI) {
