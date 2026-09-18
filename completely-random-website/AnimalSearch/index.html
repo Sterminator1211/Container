@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Image Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for loading spinner and general polish */
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #3b82f6;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .image-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .image-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <header class="sticky top-0 z-50 bg-white shadow-sm px-4 py-3 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 items-center">
+            
+            <div class="w-full flex gap-2">
+                <!-- Search Bar -->
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Search breeds or tags (e.g., orange, cute)..." 
+                    class="flex-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                >
+                
+                <!-- Alphabetical Filter Menu -->
+                <select 
+                    id="animal-filter" 
+                    class="px-4 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                >
+                    <option value="Cat">Cat</option>
+                    <option value="Dog">Dog</option>
+                    <option value="Fox">Fox</option>
+                </select>
+
+                <!-- Search Button -->
+                <button 
+                    id="search-button"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-medium shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 outline-none"
+                >
+                    Search
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Loading State -->
+        <div id="loading-indicator" class="hidden flex-col items-center justify-center py-12 gap-4">
+            <div class="spinner"></div>
+            <p class="text-gray-500 font-medium">Fetching adorable photos...</p>
+        </div>
+
+        <!-- Error/Empty State -->
+        <div id="message-container" class="hidden text-center py-12">
+            <p id="message-text" class="text-gray-500 text-lg"></p>
+        </div>
+
+        <!-- Image Grid -->
+        <div id="image-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Images will be injected here via JavaScript -->
+        </div>
+
+    </main>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const animalFilter = document.getElementById('animal-filter');
+        const searchButton = document.getElementById('search-button');
+        const imageGrid = document.getElementById('image-grid');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const messageContainer = document.getElementById('message-container');
+        const messageText = document.getElementById('message-text');
+
+        // Event Listeners
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        // Initialize with a default search
+        window.onload = () => {
+            performSearch();
+        };
+
+        async function performSearch() {
+            const searchTerm = searchInput.value.trim();
+            const animal = animalFilter.value;
+            
+            // Reset UI
+            imageGrid.innerHTML = '';
+            messageContainer.classList.add('hidden');
+            loadingIndicator.classList.replace('hidden', 'flex');
+
+            let promises = [];
+
+            try {
+                // Route to appropriate APIs based on alphabetical selection
+                if (animal === 'Cat') {
+                    promises.push(fetchCatAPI());
+                    promises.push(fetchCataasAPI(searchTerm));
+                } else if (animal === 'Dog') {
+                    promises.push(fetchDogAPI());
+                    promises.push(fetchDogCeoAPI(searchTerm));
+                } else if (animal === 'Fox') {
+                    promises.push(fetchFoxAPI());
+                }
+
+                // Execute all fetches concurrently
+                const results = await Promise.allSettled(promises);
+                
+                // Merge successfully fetched URLs
+                let mergedUrls = [];
+                results.forEach(result => {
+                    if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+                        mergedUrls = mergedUrls.concat(result.value);
+                    }
+                });
+
+                // Enforce strict NO GIF policy (Filter out anything ending in .gif)
+                mergedUrls = mergedUrls.filter(url => {
+                    if (!url) return false;
+                    const lowerUrl = url.toLowerCase();
+                    return !lowerUrl.includes('.gif');
+                });
+
+                // Display results
+                renderImages(mergedUrls);
+
+            } catch (error) {
+                console.error("Search error:", error);
+                showMessage("An error occurred while fetching images.");
+            } finally {
+                loadingIndicator.classList.replace('flex', 'hidden');
+            }
+        }
+
+        async function fetchCatAPI() {
+            try {
+                // The Cat API - strict jpg/png, limit 5
+                const res = await fetch('https://api.thecatapi.com/v1/images/search?limit=5&mime_types=jpg,png');
+                const data = await res.json();
+                return data.map(item => item.url);
+            } catch (err) {
+                console.warn("The Cat API failed:", err);
+                return [];
+            }
+        }
+
+        async function fetchCataasAPI(tag) {
+            try {
+                // CATAAS - fetch by tag if provided
+                const url = tag ? `https://cataas.com/cat/${encodeURIComponent(tag)}?json=true` : 'https://cataas.com/cat?json=true';
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                // Handle different response structures from CATAAS (sometimes array, sometimes object)
+                if (Array.isArray(data)) {
+                    return data.map(item => `https://cataas.com/cat/${item._id}`);
+                } else if (data._id) {
+                    return [`https://cataas.com/cat/${data._id}`];
+                }
+                return [];
+            } catch (err) {
+                console.warn("CATAAS failed (might be an invalid tag):", err);
+                return [];
+            }
+        }
+
+        async function fetchDogAPI() {
+            try {
+                // The Dog API - strict jpg/png, limit 5
+                const res = await fetch('https://api.thedogapi.com/v1/images/search?limit=5&mime_types=jpg,png');
+                const data = await res.json();
+                return data.map(item => item.url);
+            } catch (err) {
+                console.warn("The Dog API failed:", err);
+                return [];
+            }
+        }
+
+        async function fetchDogCeoAPI(breed) {
+            try {
+                // Dog CEO API - specific breed or random
+                const formattedBreed = breed.toLowerCase().replace(/[^a-z]/g, '');
+                const url = formattedBreed 
+                    ? `https://dog.ceo/api/breed/${formattedBreed}/images/random/5`
+                    : 'https://dog.ceo/api/breeds/image/random/5';
+                
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    return Array.isArray(data.message) ? data.message : [data.message];
+                }
+                return [];
+            } catch (err) {
+                console.warn("Dog CEO API failed (likely breed not found):", err);
+                return [];
+            }
+        }
+
+        async function fetchFoxAPI() {
+            try {
+                // FoxApi (Mocking POST as requested/contextualized, but handling failures gracefully)
+                // We attempt to fetch from FoxAPI. If CORS/Auth blocks it, we catch the error.
+                const res = await fetch('https://api.foxapi.dev/v1/fox', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data && data.url) {
+                    return [data.url];
+                }
+                return [];
+            } catch (err) {
+                console.warn("FoxAPI failed (might require authentication or have CORS issues):", err);
+                return [];
+            }
+        }
+
+        function renderImages(urls) {
+            if (!urls || urls.length === 0) {
+                showMessage("No photos found. Try a different search term!");
+                return;
+            }
+
+            urls.forEach(url => {
+                const card = document.createElement('div');
+                card.className = 'image-card bg-gray-200 rounded-xl shadow-md overflow-hidden aspect-square flex items-center justify-center relative';
+                
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Animal picture';
+                img.className = 'w-full h-full object-cover';
+                img.loading = 'lazy'; // Improve performance
+                
+                // Fallback for broken images
+                img.onerror = () => {
+                    card.style.display = 'none';
+                };
+
+                card.appendChild(img);
+                imageGrid.appendChild(card);
+            });
+        }
+
+        function showMessage(text) {
+            messageText.textContent = text;
+            messageContainer.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
